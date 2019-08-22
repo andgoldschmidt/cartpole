@@ -12,7 +12,8 @@ class cartpole:
             mass_pole: m
             length_pole: equivalently, a rigid pendulum of mass m at l/2
             
-        defaults:
+        other:
+            state: y = [x, px, theta, ptheta]
             g: gravitational constant
         '''
         try:
@@ -22,6 +23,9 @@ class cartpole:
         except:
             print('Error initializing cartpole instance: Missing required parameter.')
         
+        # Check for dissipation, gravity, and noise in params
+
+
         self.g = 1 # choose units
             
     def rhs(self, t, y):
@@ -30,7 +34,7 @@ class cartpole:
         the right hand side of dY/dt = f(Y,t)
         '''
         # no explicit time dependence
-        x,px,theta,ptheta = y
+        x, px, theta, ptheta = y
         cosX = np.cos(theta)
         sinX = np.sin(theta)
         D = (self.m*self.l**2)*(self.M + self.m*sinX**2)
@@ -38,12 +42,20 @@ class cartpole:
         dx_dt = Dinv*(-self.m*self.l*cosX*ptheta + self.m*self.l**2*px)
         dpx_dt = 0
         dtheta_dt = Dinv*(-self.m*self.l*cosX*px + (self.M+self.m)*ptheta)
-        dptheta_dt = Dinv**2*(2*self.m*self.l*cosX*sinX)*(1/2) \
-                     *((self.M+self.m)*ptheta**2 + self.m*self.l**2*px**2 - self.m*self.l*cosX*px*ptheta) \
+        dptheta_dt = Dinv**2*(self.m**2*self.l**2*cosX*sinX) \
+                     *((self.M+self.m)*ptheta**2 + self.m*self.l**2*px**2 - 2*self.m*self.l*cosX*px*ptheta) \
                      + self.m*self.g*self.l*sinX
         return [dx_dt, dpx_dt, dtheta_dt, dptheta_dt] # dy/dt
 
+    def rhs_plus(self, t, y):
+        return self.rhs(t,y) + []
 
+    def linearize(self, s):
+        return np.array([
+            [0, 1/self.M, 0, -s/(self.M*self.l)],
+            [0, 0, 0, 0,],
+            [0, -s/(self.M*self.l), 0, 1/self.M],
+            [0, 0, 0, 0]])
 # ------------------------------------------------------
 # ------------------ Visual utilities ------------------
 # ------------------------------------------------------
