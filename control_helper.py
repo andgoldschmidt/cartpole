@@ -51,6 +51,10 @@ class cartpole:
         return self.rhs(t,y) + []
 
     def A(self, s):
+        '''
+        0:  s = 1
+        pi: s = -1
+        '''
         return np.array([
             [0, 1/self.M, 0, -s/(self.M*self.l)],
             [0, 0, 0, 0,],
