@@ -50,12 +50,12 @@ class cartpole:
     def rhs_plus(self, t, y):
         return self.rhs(t,y) + []
 
-    def linearize(self, s):
+    def A(self, s):
         return np.array([
             [0, 1/self.M, 0, -s/(self.M*self.l)],
             [0, 0, 0, 0,],
-            [0, -s/(self.M*self.l), 0, 1/self.M],
-            [0, 0, 0, 0]])
+            [0, -s/(self.M*self.l), 0, (self.M+self.m)/(self.M*self.m*self.l**2)],
+            [0, 0, s*self.m*self.g*self.l, 0]])
 # ------------------------------------------------------
 # ------------------ Visual utilities ------------------
 # ------------------------------------------------------
