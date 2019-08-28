@@ -7,13 +7,15 @@ import numpy as np
 class cartpole:
     def __init__(self, params):
         '''
+        The state of the dynamics system is y = [x, px, theta, ptheta]
+
         params:
             mass_cart: M
             mass_pole: m
             length_pole: equivalently, a rigid pendulum of mass m at l/2
+            friction: eta
             
         other:
-            state: y = [x, px, theta, ptheta]
             g: gravitational constant
         '''
         try:
@@ -23,10 +25,9 @@ class cartpole:
         except:
             print('Error initializing cartpole instance: Missing required parameter.')
         
-        # Check for dissipation, gravity, and noise in params
-
-
-        self.g = 1 # choose units
+        # Check for dissipation, gravity, and noise in params   
+        self.eta = params['friction'] if 'friction' in params.keys() else 0
+        self.g = params['gravity'] if 'gravity' in params.keys() else 10 # choose units
             
     def rhs(self, t, y):
         '''
@@ -40,15 +41,16 @@ class cartpole:
         D = (self.m*self.l**2)*(self.M + self.m*sinX**2)
         Dinv = (1/D)
         dx_dt = Dinv*(-self.m*self.l*cosX*ptheta + self.m*self.l**2*px)
-        dpx_dt = 0
+        dpx_dt = -self.eta*dx_dt
         dtheta_dt = Dinv*(-self.m*self.l*cosX*px + (self.M+self.m)*ptheta)
         dptheta_dt = Dinv**2*(self.m**2*self.l**2*cosX*sinX) \
                      *((self.M+self.m)*ptheta**2 + self.m*self.l**2*px**2 - 2*self.m*self.l*cosX*px*ptheta) \
                      + self.m*self.g*self.l*sinX
-        return [dx_dt, dpx_dt, dtheta_dt, dptheta_dt] # dy/dt
+        return [dx_dt, dpx_dt, dtheta_dt, dptheta_dt] # = dy/dt
 
-    def rhs_plus(self, t, y):
-        return self.rhs(t,y) + []
+    def rhs_forced(self, t, y_forced):
+        y, force = y_forced
+        return [i+j for i,j in zip(self.rhs(t,y), [0, force, 0, 0])]
 
     def A(self, s):
         '''
@@ -57,9 +59,12 @@ class cartpole:
         '''
         return np.array([
             [0, 1/self.M, 0, -s/(self.M*self.l)],
-            [0, 0, 0, 0,],
+            [0, -self.eta/self.M, 0, s*self.eta/(self.l*self.M)],
             [0, -s/(self.M*self.l), 0, (self.M+self.m)/(self.M*self.m*self.l**2)],
             [0, 0, s*self.m*self.g*self.l, 0]])
+
+    def B(self, force):
+        return [0,force,0,0]
 # ------------------------------------------------------
 # ------------------ Visual utilities ------------------
 # ------------------------------------------------------
