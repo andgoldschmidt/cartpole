@@ -133,7 +133,6 @@ from skimage import color
 
 # Import for animation
 from matplotlib import animation
-from IPython.display import HTML
 
 class movie_maker:
     def __init__(self, cartpole, x, th, times):
