@@ -4,7 +4,6 @@ import numpy as np
 # ------------------------------------------------------
 # ------------------ Cartpole object ------------------
 # -----------------------------------------------------
-
 class cartpole:
     def __init__(self, params):
         '''
@@ -135,6 +134,9 @@ from skimage import color
 from matplotlib import animation
 
 class movie_maker:
+    '''
+    Usage: HTML(m.animate(2).to_jshtml())
+    '''
     def __init__(self, cartpole, x, th, times):
         # object and coordiantes to animate
         self.c = cartpole
