@@ -1,5 +1,6 @@
 # Functions for control theory notebook
 import numpy as np
+from scipy.linalg import eig, inv, solve_continuous_are, solve_discrete_are
 
 # ------------------------------------------------------
 # ------------------ Cartpole object ------------------
@@ -35,7 +36,8 @@ class cartpole:
         the right hand side of dY/dt = f(Y,t)
         '''
         # no explicit time dependence
-        x, px, theta, ptheta = y
+        # x is conserved (unused)
+        _, px, theta, ptheta = y
         cosX = np.cos(theta)
         sinX = np.sin(theta)
         D = (self.m*self.l**2)*(self.M + self.m*sinX**2)
@@ -49,14 +51,14 @@ class cartpole:
         return np.array([dx_dt, dpx_dt, dtheta_dt, dptheta_dt]) # = dy/dt
 
     def rhs_forced(self, t, y_forced):
-        ''' Probably will want some time dependence for the force '''
+        ''' TODO: Probably will want some time dependence for the force '''
         y, force = y_forced
         return self.rhs(t,y) + np.array([0, force, 0, 0])
 
     def A(self, s):
         '''
-        0:  s = 1
-        pi: s = -1
+        0:  s = 1 (top)
+        pi: s = -1 (bottom)
         '''
         return np.array([
             [0, 1/self.M, 0, -s/(self.M*self.l)],
@@ -71,8 +73,6 @@ class cartpole:
 # -----------------------------------------------------
 # ------------------ LQR solver -----------------------
 # -----------------------------------------------------
-
-import scipy.linalg
 # shout-out to http://www.kostasalexis.com/lqr-control.html
 # just need to know the continuous ricatti equation solver exists
  
@@ -86,12 +86,12 @@ def lqr(A,B,Q,R):
     #ref Bertsekas, p.151
  
     #first, try to solve the ricatti equation
-    X = np.array(scipy.linalg.solve_continuous_are(A, B, Q, R))
+    X = np.array(solve_continuous_are(A, B, Q, R))
      
     #compute the LQR gain
-    K = np.array(scipy.linalg.inv(R)@(B.T@X))
+    K = np.array(inv(R)@(B.T@X))
      
-    eigVals, eigVecs = scipy.linalg.eig(A-B@K)
+    eigVals, _ = eig(A-B@K)
      
     return K, X, eigVals
  
@@ -106,12 +106,12 @@ def dlqr(A,B,Q,R):
     #ref Bertsekas, p.151
  
     #first, try to solve the ricatti equation
-    X = np.array(scipy.linalg.solve_discrete_are(A, B, Q, R))
+    X = np.array(solve_discrete_are(A, B, Q, R))
      
     #compute the LQR gain
-    K = np.array(scipy.linalg.inv(B.T@X@B+R)*(B.T@X@A))
+    K = np.array(inv(B.T@X@B+R)*(B.T@X@A))
      
-    eigVals, eigVecs = scipy.linalg.eig(A-B@K)
+    eigVals, _ = eig(A-B@K)
      
     return K, X, eigVals
 
